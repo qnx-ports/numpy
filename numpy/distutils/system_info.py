@@ -326,16 +326,23 @@ if sys.platform == 'win32':
         add_system_root(os.path.join(conda_dir, 'Library'))
 
 else:
-    default_lib_dirs = libpaths(['/usr/local/lib', '/opt/lib', '/usr/lib',
-                                 '/opt/local/lib', '/sw/lib'], platform_bits)
-    default_runtime_dirs = []
-    default_include_dirs = ['/usr/local/include',
-                            '/opt/include',
-                            # path of umfpack under macports
-                            '/opt/local/include/ufsparse',
-                            '/opt/local/include', '/sw/include',
-                            '/usr/include/suitesparse']
-    default_src_dirs = ['.', '/usr/local/src', '/opt/src', '/sw/src']
+    if 'QNX_TARGET' in os.environ:
+        default_lib_dirs = []
+        default_runtime_dirs = []
+        default_include_dirs = []
+        default_src_dirs = []
+    else:
+        log.error("QNX_TARGET not defined")
+        default_lib_dirs = libpaths(['/usr/local/lib', '/opt/lib', '/usr/lib',
+                                    '/opt/local/lib', '/sw/lib'], platform_bits)
+        default_runtime_dirs = []
+        default_include_dirs = ['/usr/local/include',
+                                '/opt/include',
+                                # path of umfpack under macports
+                                '/opt/local/include/ufsparse',
+                                '/opt/local/include', '/sw/include',
+                                '/usr/include/suitesparse']
+        default_src_dirs = ['.', '/usr/local/src', '/opt/src', '/sw/src']
 
     default_x11_lib_dirs = libpaths(['/usr/X11R6/lib', '/usr/X11/lib',
                                      '/usr/lib'], platform_bits)

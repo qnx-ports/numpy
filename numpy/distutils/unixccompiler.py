@@ -46,7 +46,12 @@ def UnixCCompiler__compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts
     # gcc style automatic dependencies, outputs a makefile (-MF) that lists
     # all headers needed by a c file as a side effect of compilation (-MMD)
     if getattr(self, '_auto_depends', False):
-        deps = ['-MMD', '-MF', obj + '.d']
+        # QNX compiler does not like -MMD and -MF flags
+        if 'QNX_TARGET' in os.environ:
+            deps = []
+        else:
+            log.error("QNX_TARGET not defined")
+            deps = ['-MMD', '-MF', obj + '.d']
     else:
         deps = []
 

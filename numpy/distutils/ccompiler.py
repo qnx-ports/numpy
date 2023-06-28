@@ -5,6 +5,8 @@ import platform
 import shlex
 import time
 import subprocess
+# QNX
+import platform
 from copy import copy
 from pathlib import Path
 from distutils import ccompiler
@@ -808,6 +810,11 @@ def gen_lib_options(compiler, library_dirs, runtime_library_dirs, libraries):
     r = _distutils_gen_lib_options(compiler, library_dirs,
                                    runtime_library_dirs, libraries)
     lib_opts = []
+    # Need to add CFLAGS to linker options for QNX
+    if 'QNX_TARGET' in os.environ:
+        lib_opts = [os.environ['CFLAGS']]
+    else:
+        log.error("QNX_TARGET not defined")
     for i in r:
         if is_sequence(i):
             lib_opts.extend(list(i))

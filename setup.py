@@ -36,6 +36,9 @@ builtins.__NUMPY_SETUP__ = True
 # seems to matter outside of this module and it was already a str.
 FULLVERSION = versioneer.get_version()
 
+if 'QNX_TARGET' in os.environ:
+    FULLVERSION = os.environ.get('NUMPY_VERSION')
+
 # Capture the version string:
 # 1.22.0.dev0+ ... -> ISRELEASED == False, VERSION == 1.22.0
 # 1.22.0rc1+ ... -> ISRELEASED == False, VERSION == 1.22.0

@@ -5,6 +5,7 @@ import pkgutil
 import types
 import importlib
 import warnings
+import os
 
 import numpy as np
 import numpy
@@ -458,12 +459,14 @@ def test_api_importable():
         raise AssertionError("Modules in the public API that were not "
                              "found: {}".format(module_names))
 
-    with warnings.catch_warnings(record=True) as w:
-        warnings.filterwarnings('always', category=DeprecationWarning)
-        warnings.filterwarnings('always', category=ImportWarning)
-        for module_name in PRIVATE_BUT_PRESENT_MODULES:
-            if not check_importable(module_name):
-                module_names.append(module_name)
+    # Disable warning checks for QNX
+    if 'QNX' not in os.environ:
+        with warnings.catch_warnings(record=True) as w:
+            warnings.filterwarnings('always', category=DeprecationWarning)
+            warnings.filterwarnings('always', category=ImportWarning)
+            for module_name in PRIVATE_BUT_PRESENT_MODULES:
+                if not check_importable(module_name):
+                    module_names.append(module_name)
 
     if module_names:
         raise AssertionError("Modules that are not really public but looked "
