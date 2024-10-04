@@ -20,6 +20,7 @@ import re
 import sys
 import types
 import warnings
+import ctypes
 
 from subprocess import getstatusoutput
 
@@ -647,6 +648,337 @@ class Win32CPUInfo(CPUInfoBase):
     def _has_3dnowext(self):
         return self.is_AMD() and self.info[0]['Family'] in [6, 15]
 
+# Parent
+class QnxCPUInfo(CPUInfoBase):
+    def __init__(self):
+        self.syspage_ptr = None
+        self.cpuinfo_arr = None
+        self.cpu_name = None
+
+    def _not_impl(self): pass
+
+    # From https://gitlab.com/qnx/ports/cpuinfo/-/blob/qnx/src/qnx/api.c?ref_type=heads
+    # Athlon
+
+    def _is_ARM(self):
+        return self.cpu_name is not None and 'Cortex' in self.cpu_name
+
+    def _is_Cortex_A7(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A7')
+
+    def _is_Cortex_A53(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A53')
+
+    def _is_Cortex_A55R0(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A55R0')
+
+    def _is_Cortex_A55(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A55')
+
+    def _is_Cortex_A57(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A57')
+
+    def _is_Cortex_A65(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A65')
+
+    def _is_Cortex_A72(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A72')
+
+    def _is_Cortex_A73(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A73')
+
+    def _is_Cortex_A75(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A75')
+
+    def _is_Cortex_A76(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A76')
+
+    def _is_Cortex_A77(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A77')
+
+    def _is_Cortex_A78(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('A78')
+
+    def _is_Cortex_Neoverse_N1(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Neoverse-N1')
+
+    def _is_Cortex_Neoverse_E1(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Neoverse-E1')
+
+    def _is_Cortex_Scorpion(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Scorpion')
+
+    def _is_Cortex_Krait(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Krait')
+
+    def _is_Cortex_Kryo(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Kryo')
+
+    def _is_Cortex_falkor(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('falkor')
+
+    def _is_Cortex_Saphira(self):
+        return self.cpu_name is not None and self._is_ARM() and ''.join(self.cpu_name.split()).endswith('Saphira')
+
+    # Intel
+
+    def _is_Intel(self):
+        return self.cpu_name is not None and 'Intel' in self.cpu_name or 'Core' in self.cpu_name
+
+    def _is_Skylake(self):
+        return self.cpu_name is not None and 'Core i7/5/3' in self.cpu_name
+
+    # Varia
+
+    def _is_singleCPU(self):
+        return self.syspage_ptr is not None and self.syspage_ptr.contents.num_cpu == 1
+
+    def _getNCPUs(self):
+        return self.syspage_ptr is not None and self.syspage_ptr.contents.num_cpu
+
+    def _has_flags(self, flags):
+        return self.cpuinfo_arr is not None and 0 != len([True for entry in self.cpuinfo_arr if (entry.flags & flags) == flags])
+
+class Qnx710CPUInfo(QnxCPUInfo):
+
+    # syspage cpuinfo flags
+    CPU_FLAG_FPU = (1 << 31)
+    CPU_FLAG_MMU = (1 << 30)
+
+    AARCH64_CPU_FLAG_SMP = 0x0008
+    AARCH64_CPU_FLAG_SIMD = 0x0040
+    AARCH64_CPU_FLAG_CC_INCR_32 = 0x0200
+    AARCH64_CPU_FLAG_S32G_TLB_ERRATA = 0x80
+    AARCH64_CPU_FLAG_IMX8QM_TLB_ERRATA = 0x100
+    AARCH64_CPU_SPECTRE_V2_FIX = 0x1000
+    AARCH64_CPU_SPECTRE_V2_MMU = 0x2000
+    AARCH64_CPU_ACTLR = 0x4000
+    AARCH64_CPU_FLAG_LSE = 0x8000
+    AARCH64_CPU_FLAG_VHE = 0x00010000
+    AARCH64_CPU_PAUTH = 0x20000
+    AARCH64_CPU_FLAG_KRYO_TLB = 0x40000
+    AARCH64_CPU_SSBS = 0x80000
+
+    AARCH64_CPU_FLAG_AES = 0x100000
+    AARCH64_CPU_FLAG_PMULL = 0x200000
+    AARCH64_CPU_FLAG_SHA1 = 0x400000
+    AARCH64_CPU_FLAG_SHA256 = 0x800000
+    AARCH64_CPU_FLAG_SHA512 = 0x1000000
+    AARCH64_CPU_FLAG_SHA3 = 0x2000000
+    AARCH64_CPU_FLAG_RNDR = 0x4000000
+
+    AARCH64_CPU_FLAG_ICACHE_COHERENT = 0x8000000
+
+    X86_CPU_PAE = (1 <<  13)
+
+    X86_64_CPU_CPUID = (1 <<  0)
+    X86_64_CPU_RDTSC = (1 <<  1)
+    X86_64_CPU_INVLPG = (1 <<  2)
+    X86_64_CPU_WP = (1 <<  3)
+    X86_64_CPU_BSWAP = (1 <<  4)
+    X86_64_CPU_MMX = (1 <<  5)
+    X86_64_CPU_CMOV = (1 <<  6)
+    X86_64_CPU_PSE = (1 <<  7)
+    X86_64_CPU_PGE = (1 <<  8)
+    X86_64_CPU_MTRR = (1 <<  9)
+    X86_64_CPU_SEP = (1 <<  10)
+    X86_64_CPU_SIMD = (1 <<  11)
+    X86_64_CPU_FXSR = (1 <<  12)
+    X86_64_CPU_PAE = (1 <<  13)
+    X86_64_CPU_NX = (1 <<  14)
+    X86_64_CPU_SSE2 = (1 <<  15)
+    X86_64_CPU_AVX = (1 <<  16)
+    X86_64_CPU_XSAVE = (1 <<  17)
+    X86_64_CPU_PAT = (1 <<  18)
+    X86_64_CPU_PTESPLIT_TLBFLUSH = (1 <<  19)
+    X86_64_CPU_PCID = (1 <<  20)
+    X86_64_CPU_INVARIANT_TSC = (1 <<  21)
+
+    class SysPageEntry(ctypes.LittleEndianStructure):
+
+        class SysPageEntryInfo(ctypes.LittleEndianStructure):
+            _fields_ = [('entry_off', ctypes.c_uint16),
+                        ('entry_size', ctypes.c_uint16)]
+
+        class SysPageArrayInfo(ctypes.LittleEndianStructure):
+            _fields_ = [('entry_off', ctypes.c_uint16),
+                        ('entry_size', ctypes.c_uint16),
+                        ('element_size', ctypes.c_uint16)]
+
+        class VersionEntry(ctypes.LittleEndianStructure):
+            _fields_ = [('major', ctypes.c_uint16),
+                        ('minor', ctypes.c_uint16)]
+
+        _fields_ = [('size', ctypes.c_uint16),
+                    ('total_size', ctypes.c_uint16),
+                    ('type', ctypes.c_uint16),
+                    ('num_cpu', ctypes.c_uint16),
+                    ('system_private', SysPageEntryInfo),
+                    ('old_asinfo_sect', SysPageEntryInfo),
+                    ('meminfo', SysPageEntryInfo),
+                    ('hwinfo', SysPageEntryInfo),
+                    ('old_cpuinfo_sect', SysPageEntryInfo),
+                    ('old_cacheattr_sect', SysPageEntryInfo),
+                    ('qtime', SysPageEntryInfo),
+                    ('callout', SysPageEntryInfo),
+                    ('callin', SysPageEntryInfo),
+                    ('typed_strings', SysPageEntryInfo),
+                    ('strings', SysPageEntryInfo),
+                    ('old_intrinfo_sect', SysPageEntryInfo),
+                    ('smp', SysPageEntryInfo),
+                    ('pminfo', SysPageEntryInfo),
+                    ('old_mdriver_sect', SysPageEntryInfo),
+                    ('spare0', ctypes.c_uint32 * 1),
+                    ('un_filler', ctypes.c_uint64 * 20),
+                    ('asinfo', SysPageArrayInfo),
+                    ('cpuinfo', SysPageArrayInfo),
+                    ('cacheattr', SysPageArrayInfo),
+                    ('intrinfo', SysPageArrayInfo),
+                    ('mdriver', SysPageArrayInfo)]
+
+    class CpuInfoEntry(ctypes.LittleEndianStructure):
+        _fields_ = [('cpu', ctypes.c_uint32),
+                    ('speed', ctypes.c_uint32),
+                    ('flags', ctypes.c_uint32),
+                    ('smp_hwcoreid', ctypes.c_uint32),
+                    ('idle_history', ctypes.c_uint64),
+                    ('spare1', ctypes.c_uint32),
+                    ('name', ctypes.c_uint16),
+                    ('ins_cache', ctypes.c_uint8),
+                    ('data_cache', ctypes.c_uint8)]
+
+    def __init__(self):
+        super().__init__()
+
+        libc=ctypes.CDLL('libc.so.5')
+        syspage_ptr = ctypes.POINTER(self.SysPageEntry).in_dll(libc, '_syspage_ptr')
+        syspage_cpuinfo_arr = [ctypes.cast(ctypes.addressof(syspage_ptr.contents) + syspage_ptr.contents.cpuinfo.entry_off + off, ctypes.POINTER(self.CpuInfoEntry)).contents
+                               for off in range(0, syspage_ptr.contents.cpuinfo.element_size, syspage_ptr.contents.cpuinfo.entry_size)]
+        syspage_strings_ptr = ctypes.cast(ctypes.addressof(syspage_ptr.contents) + syspage_ptr.contents.strings.entry_off, ctypes.POINTER(ctypes.c_char))
+        cpu_name_ptr = ctypes.cast(ctypes.addressof(syspage_strings_ptr.contents) + syspage_cpuinfo_arr[0].name, ctypes.c_char_p)
+        cpu_name = cpu_name_ptr.value.decode("utf-8")
+
+        self.syspage_ptr = syspage_ptr
+        self.cpuinfo_arr = syspage_cpuinfo_arr
+        self.cpu_name = cpu_name
+
+class Qnx800CPUInfo(QnxCPUInfo):
+
+    # syspage cpuinfo flags
+    CPU_FLAG_FPU = (1 << 31)
+    CPU_FLAG_MMU = (1 << 30)
+
+    AARCH64_CPU_FLAG_SMP = 0x0008
+    AARCH64_CPU_FLAG_SIMD = 0x0040
+    AARCH64_CPU_FLAG_CC_INCR_32 = 0x0200
+    AARCH64_CPU_FLAG_S32G_TLB_ERRATA = 0x80
+    AARCH64_CPU_FLAG_IMX8QM_TLB_ERRATA = 0x100
+    AARCH64_CPU_SPECTRE_V2_FIX = 0x1000
+    AARCH64_CPU_SPECTRE_V2_MMU = 0x2000
+    AARCH64_CPU_ACTLR = 0x4000
+    AARCH64_CPU_FLAG_LSE = 0x8000
+    AARCH64_CPU_FLAG_VHE = 0x00010000
+    AARCH64_CPU_PAUTH = 0x20000
+    AARCH64_CPU_FLAG_KRYO_TLB = 0x40000
+    AARCH64_CPU_SSBS = 0x80000
+
+    AARCH64_CPU_FLAG_AES = 0x100000
+    AARCH64_CPU_FLAG_PMULL = 0x200000
+    AARCH64_CPU_FLAG_SHA1 = 0x400000
+    AARCH64_CPU_FLAG_SHA256 = 0x800000
+    AARCH64_CPU_FLAG_SHA512 = 0x1000000
+    AARCH64_CPU_FLAG_SHA3 = 0x2000000
+    AARCH64_CPU_FLAG_RNDR = 0x4000000
+
+    AARCH64_CPU_FLAG_ICACHE_COHERENT = 0x8000000
+
+    X86_64_CPU_CPUID = (1 << 0)
+    X86_64_CPU_RDTSC = (1 << 1)
+    X86_64_CPU_INVLPG = (1 << 2)
+    X86_64_CPU_WP = (1 << 3)
+    X86_64_CPU_BSWAP = (1 << 4)
+    X86_64_CPU_MMX = (1 << 5)
+    X86_64_CPU_CMOV = (1 << 6)
+    X86_64_CPU_PSE = (1 << 7)
+    X86_64_CPU_PGE = (1 << 8)
+    X86_64_CPU_MTRR = (1 << 9)
+    X86_64_CPU_SEP = (1 << 10)
+    X86_64_CPU_SIMD = (1 << 11)
+    X86_64_CPU_FXSR = (1 << 12)
+    X86_64_CPU_PAE = (1 << 13)
+    X86_64_CPU_NX = (1 << 14)
+    X86_64_CPU_SSE2 = (1 << 15)
+    X86_64_CPU_AVX = (1 << 16)
+    X86_64_CPU_XSAVE = (1 << 17)
+    X86_64_CPU_PAT = (1 << 18)
+    X86_64_CPU_PTESPLIT_TLBFLUSH = (1 << 19)
+    X86_64_CPU_PCID = (1 << 20)
+    X86_64_CPU_INVARIANT_TSC = (1 << 21)
+    X86_64_CPU_RDRAND = (1 << 22)
+    X86_64_CPU_RDSEED = (1 << 23)
+    X86_64_CPU_FSGSBASE = (1 << 24)
+    X86_64_CPU_TSC_DEADLINE = (1 << 25)
+
+    class SysPageEntry(ctypes.LittleEndianStructure):
+
+        class SysPageEntryInfo(ctypes.LittleEndianStructure):
+            _fields_ = [('entry_off', ctypes.c_uint16),
+                        ('entry_size', ctypes.c_uint16)]
+
+        class SysPageArrayInfo(ctypes.LittleEndianStructure):
+            _fields_ = [('entry_off', ctypes.c_uint16),
+                        ('entry_size', ctypes.c_uint16),
+                        ('element_size', ctypes.c_uint16)]
+
+        class VersionEntry(ctypes.LittleEndianStructure):
+            _fields_ = [('major', ctypes.c_uint16),
+                        ('minor', ctypes.c_uint16)]
+
+        _fields_ = [('size', ctypes.c_uint16),
+                    ('total_size', ctypes.c_uint16),
+                    ('type', ctypes.c_uint16),
+                    ('num_cpu', ctypes.c_uint16),
+                    ('system_private', SysPageEntryInfo),
+                    ('version', VersionEntry),
+                    ('hwinfo', SysPageEntryInfo),
+                    ('qtime', SysPageEntryInfo),
+                    ('callout', SysPageEntryInfo),
+                    ('typed_strings', SysPageEntryInfo),
+                    ('strings', SysPageEntryInfo),
+                    ('smp', SysPageEntryInfo),
+                    ('un_filler', ctypes.c_uint64 * 20),
+                    ('asinfo', SysPageArrayInfo),
+                    ('cpuinfo', SysPageArrayInfo),
+                    ('cacheattr', SysPageArrayInfo),
+                    ('intrinfo', SysPageArrayInfo),
+                    ('hypinfo', SysPageEntryInfo),
+                    ('cluster', SysPageArrayInfo)]
+
+    class CpuInfoEntry(ctypes.LittleEndianStructure):
+        _fields_ = [('cpu', ctypes.c_uint32),
+                    ('speed', ctypes.c_uint32),
+                    ('flags', ctypes.c_uint64),
+                    ('smp_hwcoreid', ctypes.c_uint64),
+                    ('spare', ctypes.c_uint32),
+                    ('name', ctypes.c_uint16),
+                    ('ins_cache', ctypes.c_uint8),
+                    ('data_cache', ctypes.c_uint8)]
+
+    def __init__(self):
+        super().__init__()
+
+        libc=ctypes.CDLL('libc.so.6')
+        syspage_ptr = ctypes.POINTER(self.SysPageEntry).in_dll(libc, '_syspage_ptr')
+        syspage_cpuinfo_arr = [ctypes.cast(ctypes.addressof(syspage_ptr.contents) + syspage_ptr.contents.cpuinfo.entry_off + off, ctypes.POINTER(self.CpuInfoEntry)).contents
+                               for off in range(0, syspage_ptr.contents.cpuinfo.element_size, syspage_ptr.contents.cpuinfo.entry_size)]
+        syspage_strings_ptr = ctypes.cast(ctypes.addressof(syspage_ptr.contents) + syspage_ptr.contents.strings.entry_off, ctypes.POINTER(ctypes.c_char))
+        cpu_name_ptr = ctypes.cast(ctypes.addressof(syspage_strings_ptr.contents) + syspage_cpuinfo_arr[0].name, ctypes.c_char_p)
+        cpu_name = cpu_name_ptr.value.decode("utf-8")
+
+        self.syspage_ptr = syspage_ptr
+        self.cpuinfo_arr = syspage_cpuinfo_arr
+        self.cpu_name = cpu_name
+
 if sys.platform.startswith('linux'): # variations: linux2,linux-i386 (any others?)
     cpuinfo = LinuxCPUInfo
 elif sys.platform.startswith('irix'):
@@ -660,6 +992,14 @@ elif sys.platform.startswith('win32'):
 elif sys.platform.startswith('cygwin'):
     cpuinfo = LinuxCPUInfo
 #XXX: other OS's. Eg. use _winreg on Win32. Or os.uname on unices.
+elif sys.platform.startswith('qnx'):
+    if os.uname().release.startswith('7.1.0'):
+        cpuinfo = Qnx710CPUInfo
+    elif os.uname().release.startswith('8.0.0'):
+        cpuinfo = Qnx800CPUInfo
+    else:
+        warnings.warn(f"Unsupported OS version QNX-{os.uname().release}.", UserWarning, stacklevel=1)
+        cpuinfo = CPUInfoBase
 else:
     cpuinfo = CPUInfoBase
 
