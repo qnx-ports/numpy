@@ -995,7 +995,7 @@ elif sys.platform.startswith('cygwin'):
 elif sys.platform.startswith('qnx'):
     if os.uname().release.startswith('7.1.0'):
         cpuinfo = Qnx710CPUInfo
-    elif os.uname().release.startswith('8.0.0'):
+    elif os.uname().release.startswith('8.0'):
         cpuinfo = Qnx800CPUInfo
     else:
         warnings.warn(f"Unsupported OS version QNX-{os.uname().release}.", UserWarning, stacklevel=1)
