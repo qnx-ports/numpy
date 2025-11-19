@@ -39,6 +39,13 @@ class config(old_config):
 
     def _check_compiler (self):
         old_config._check_compiler(self)
+
+        if 'QNX_TARGET' in os.environ and hasattr(self.compiler, "compiler_so"):
+            self.compiler.compiler_so = [
+                f for f in self.compiler.compiler_so
+                if f != "-fcf-protection"
+            ]
+
         from numpy.distutils.fcompiler import FCompiler, new_fcompiler
 
         if sys.platform == 'win32' and (self.compiler.compiler_type in

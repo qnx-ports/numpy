@@ -105,6 +105,11 @@ class build_clib(old_build_clib):
                                      force=self.force)
         self.compiler.customize(self.distribution,
                                 need_cxx=self.have_cxx_sources())
+        if 'QNX_TARGET' in os.environ and hasattr(self.compiler, 'compiler_so'):
+            self.compiler.compiler_so = [
+                f for f in self.compiler.compiler_so
+                if f != "-fcf-protection"
+            ]
 
         if self.warn_error:
             self.compiler.compiler.append('-Werror')

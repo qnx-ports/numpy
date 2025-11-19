@@ -139,6 +139,12 @@ class build_ext (old_build_ext):
         self.compiler.customize(self.distribution)
         self.compiler.customize_cmd(self)
 
+        if 'QNX_TARGET' in os.environ and hasattr(self.compiler, 'compiler_so'):
+            self.compiler.compiler_so = [
+                f for f in self.compiler.compiler_so
+                if f != "-fcf-protection"
+            ]
+
         if self.warn_error:
             self.compiler.compiler.append('-Werror')
             self.compiler.compiler_so.append('-Werror')
@@ -277,6 +283,11 @@ class build_ext (old_build_ext):
             compiler = self._cxx_compiler
             compiler.customize(self.distribution, need_cxx=need_cxx_compiler)
             compiler.customize_cmd(self)
+            if 'QNX_TARGET' in os.environ and hasattr(self._cxx_compiler, 'compiler_so'):
+                self._cxx_compiler.compiler_so = [
+                    f for f in self._cxx_compiler.compiler_so
+                    if f != "-fcf-protection"
+            ]
             compiler.show_customization()
             self._cxx_compiler = compiler.cxx_compiler()
         else:

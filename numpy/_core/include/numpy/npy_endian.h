@@ -9,10 +9,14 @@
 #if defined(NPY_HAVE_ENDIAN_H) || defined(NPY_HAVE_SYS_ENDIAN_H)
     /* Use endian.h if available */
 
+    #if defined(__QNX__)
+    #include <gulliver.h>
+    #else
     #if defined(NPY_HAVE_ENDIAN_H)
     #include <endian.h>
     #elif defined(NPY_HAVE_SYS_ENDIAN_H)
     #include <sys/endian.h>
+    #endif
     #endif
 
     #if defined(BYTE_ORDER) && defined(BIG_ENDIAN) && defined(LITTLE_ENDIAN)
