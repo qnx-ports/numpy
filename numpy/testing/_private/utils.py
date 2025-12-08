@@ -42,7 +42,7 @@ __all__ = [
         'assert_no_gc_cycles', 'break_cycles', 'HAS_LAPACK64', 'IS_PYSTON',
         'IS_MUSL', 'check_support_sve', 'NOGIL_BUILD',
         'IS_EDITABLE', 'IS_INSTALLED', 'NUMPY_ROOT', 'run_threaded', 'IS_64BIT',
-        'BLAS_SUPPORTS_FPE',
+        'BLAS_SUPPORTS_FPE', "IS_QNX",
         ]
 
 
@@ -86,6 +86,7 @@ else:
     if not IS_EDITABLE and np_dist.locate_file('numpy') != NUMPY_ROOT:
         IS_INSTALLED = False
 
+IS_QNX = platform.system() == 'QNX'
 IS_WASM = platform.machine() in ["wasm32", "wasm64"]
 IS_PYPY = sys.implementation.name == 'pypy'
 IS_PYSTON = hasattr(sys, "pyston_version_info")

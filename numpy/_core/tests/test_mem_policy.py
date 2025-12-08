@@ -9,7 +9,7 @@ import pytest
 
 import numpy as np
 from numpy._core.multiarray import get_handler_name
-from numpy.testing import IS_EDITABLE, IS_WASM, assert_warns, extbuild
+from numpy.testing import IS_EDITABLE, IS_WASM, assert_warns, extbuild, IS_QNX
 
 
 @pytest.fixture
@@ -25,6 +25,8 @@ def get_module(tmp_path):
         pytest.skip("Can't build module inside Wasm")
     if IS_EDITABLE:
         pytest.skip("Can't build module for editable install")
+    if IS_QNX:
+        pytest.skip("Can't build module on QNX target")
 
     functions = [
         ("get_default_policy", "METH_NOARGS", """

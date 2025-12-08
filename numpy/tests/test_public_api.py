@@ -12,7 +12,7 @@ import pytest
 
 import numpy
 import numpy as np
-from numpy.testing import IS_WASM
+from numpy.testing import IS_WASM, IS_QNX
 
 try:
     import ctypes
@@ -413,7 +413,7 @@ def test_api_importable():
                              f"found: {module_names}")
 
     # Disable warning checks for QNX
-    if 'QNX' not in os.environ:
+    if not IS_QNX:
         with warnings.catch_warnings(record=True) as w:
             warnings.filterwarnings('always', category=DeprecationWarning)
             warnings.filterwarnings('always', category=ImportWarning)
